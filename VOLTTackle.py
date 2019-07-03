@@ -27,9 +27,8 @@ f0.write("VOLT")
 f0.write(struct.pack("i", 0x02))
 f0.write(struct.pack("i", number_files))
 f0.write(struct.pack("i", namelength))
-#f0.write(struct.pack("i", 0x00))
 
-# Handle pre filelist section
+# Handle name hash section
 for i in range(0,number_files):
     namehash = zlib.crc32(names[i])
     f0.write(struct.pack("i", namehash))
@@ -64,7 +63,6 @@ for filename in os.listdir(args.directory):
         print "Padding " + filename
         paddingsize = 0x800 - (size % 0x800)
         startaddr += paddingsize
-        needPadCheck = False
     else:
         print filename
 
@@ -73,35 +71,26 @@ for filename in os.listdir(args.directory):
     f0.write(filename)
     f0.write(bytearray([0]))
 
-    startaddr += size
-    f1.close()
+    GoBack = f0.tell()
 
-
-f0.write(bytearray([0x69])*padlength)
-
-needPadCheck = False
-
-for filename in os.listdir(args.directory):
-    fpath = os.path.join(args.directory, filename)
-    f1 = open(fpath, "rb")
-
-    header = f1.read(4)
-
-    if header != "BIGB":
-        needPadCheck = True
-
-    f1.seek(0x00, os.SEEK_END)
-    size = f1.tell()
-    f1.seek(0x00, os.SEEK_SET)
+    if needPadCheck == True:
+        padaddr = startaddr - paddingsize
+        f0.seek(padaddr, os.SEEK_SET)
+    else:
+        f0.seek(startaddr, os.SEEK_SET)
 
     filebytes = f1.read(size)
     f0.write(filebytes)
 
     if needPadCheck == True:
-        paddingsize = 0x800 - (size % 0x800)
         f0.write(bytearray([0x69])*paddingsize)
         needPadCheck = False
 
+    f0.seek(GoBack, os.SEEK_SET)
+    startaddr += size
     f1.close()
+
+# Write main padding
+f0.write(bytearray([0x69])*padlength)
 
 f0.close()
