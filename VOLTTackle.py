@@ -5,6 +5,7 @@ import zlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument("directory")
+parser.add_argument("-n", "--nopad", action="store_true", help="Disable padding")
 args = parser.parse_args()
 
 address = 0x00
@@ -49,11 +50,13 @@ for filename in os.listdir(args.directory):
     fpath = os.path.join(args.directory, filename)
     f1 = open(fpath, "rb")
 
-    header = f1.read(4)
+    if args.nopad != True:
+        
+        header = f1.read(4)
 
-    # pad everything that isn't a strat
-    if header != "BIGB":
-        needPadCheck = True
+        # pad everything that isn't a strat
+        if header != "BIGB":
+            needPadCheck = True
 
     f1.seek(0x00, os.SEEK_END)
     size = f1.tell()
