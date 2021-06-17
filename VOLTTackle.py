@@ -47,10 +47,10 @@ for fileName in fileList:
     f1 = open(filePath, "rb")
 
     if args.nopad != True:
-        header = f1.read(4).decode()
+        header = f1.read(4)
 
         # pad everything that isn't a strat WAD
-        if header != "BIGB":
+        if header != "BIGB".encode():
             needPadCheck = True
 
     f1.seek(0x00, os.SEEK_END)
